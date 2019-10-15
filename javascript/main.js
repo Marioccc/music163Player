@@ -1,6 +1,47 @@
-var soundCloud={};
+var UI={};
+UI.keyboardClick=()=>{
+    document.querySelector(".input-search").addEventListener("keyup",e=>{
+        if(e.keyCode===13){
+            soundCloud.search(document.querySelector(".input-search").value);
+            document.querySelector(".input-search").value="";
+        }
+    })
+};
+UI.buttonClick=()=>{
+    document.querySelector(".js-submit").addEventListener("click",()=>{
+        soundCloud.search(document.querySelector(".input-search").value);
+        document.querySelector(".input-search").value="";
+    })
+};
+UI.keyboardClick();
+UI.buttonClick();
 
-soundCloud.creadCard=(imgsrc,address,name)=>{
+
+var soundCloud={};
+soundCloud.creadListItem=(src)=>{
+    var inner = document.createElement("div");
+    inner.classList.add("inner");
+
+    var i = document.createElement("i");
+    i.classList.add("icon","close");
+    i.addEventListener("click",function () {
+        document.querySelector(".js-playlist").removeChild(this.parentElement);
+    });
+    var iframe = document.createElement("iframe");
+    iframe.frameBorder="0";
+    iframe.marginWidth="0";
+    iframe.marginHeight="0";
+    iframe.width="100%";
+    iframe.height="100";
+    iframe.src=src;
+    inner.appendChild(i);
+    inner.appendChild(iframe);
+    document.querySelector(".js-playlist").appendChild(inner);
+};
+soundCloud.renderToList=(id)=>{
+    soundCloud.creadListItem("//music.163.com/outchain/player?type=2&id="+id+"&auto=1&height=66");
+};
+soundCloud.creadCard=(id,imgsrc,address,name)=>{
     var cardContainer = document.querySelector(".cards");
 
     var card = document.createElement("div");
@@ -18,16 +59,15 @@ soundCloud.creadCard=(imgsrc,address,name)=>{
     var header = document.createElement("div");
     header.classList.add("header");
     var link = document.createElement("a");
-    var audio = document.createElement("audio");
-    audio.src=address;
-    audio.controls=true;
     link.href=address;
     link.innerText=name;
     header.appendChild(link);
-    header.appendChild(audio);
     contentContainer.appendChild(header);
 
     var bottom = document.createElement("div");
+    bottom.addEventListener("click",function(){
+        soundCloud.renderToList(id);
+    })
     bottom.classList.add("ui","bottom","attached","button","js-button");    
     var bottom_i = document.createElement("i");
     bottom_i.classList.add("add","icon");
@@ -44,22 +84,30 @@ soundCloud.creadCard=(imgsrc,address,name)=>{
 
 soundCloud.requestUrl = "http://localhost:3000";
 
-let songData=fetch(soundCloud.requestUrl+"/search?keywords=像鱼")
-.then(response=>songData=response.json());
+soundCloud.search=(value)=>{
+    //clean search result
+    document.querySelector(".cards").innerHTML="";
 
-songData.then(response=>{
-    response.result.songs.forEach(async item => {
-        // request song url
-        let urlResponse =await fetch(soundCloud.requestUrl+"/song/url?id="+item.id);
-        let urlObj =await urlResponse.json();
-        let songUrl = urlObj.data[0].url;
-        // request song img
-        let imgResponse =await fetch(soundCloud.requestUrl+"/song/detail?ids="+item.id);
-        let imgObj =await imgResponse.json();
-        let songImg = imgObj.songs[0].al.picUrl;
-        // request song name
-        let songName = imgObj.songs[0].name;
-        // Add To Dom
-        soundCloud.creadCard(songImg,songUrl,songName);
+    let songData=fetch(soundCloud.requestUrl+"/search?keywords="+value)
+    .then(response=>songData=response.json());
+    
+    songData.then(response=>{
+
+        response.result.songs.forEach(async item => {
+            // request song url
+            let urlResponse =await fetch(soundCloud.requestUrl+"/song/url?id="+item.id);
+            let urlObj =await urlResponse.json();
+            let songUrl = urlObj.data[0].url;
+            // request song img
+            let imgResponse =await fetch(soundCloud.requestUrl+"/song/detail?ids="+item.id);
+            let imgObj =await imgResponse.json();
+            let songImg = imgObj.songs[0].al.picUrl;
+            // request song name
+            let songName = imgObj.songs[0].name;
+            // Add To Dom
+            soundCloud.creadCard(item.id,songImg,songUrl,songName);
+        });
+        
     });
-});
+}
+
