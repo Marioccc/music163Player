@@ -3,14 +3,12 @@ UI.keyboardClick=()=>{
     document.querySelector(".input-search").addEventListener("keyup",e=>{
         if(e.keyCode===13){
             soundCloud.search(document.querySelector(".input-search").value);
-            document.querySelector(".input-search").value="";
         }
     })
 };
 UI.buttonClick=()=>{
     document.querySelector(".js-submit").addEventListener("click",()=>{
         soundCloud.search(document.querySelector(".input-search").value);
-        document.querySelector(".input-search").value="";
     })
 };
 UI.keyboardClick();
@@ -18,15 +16,19 @@ UI.buttonClick();
 
 
 var soundCloud={};
+soundCloud.localData=[];
 soundCloud.creadListItem=(src)=>{
+    var playList = document.querySelector(".js-playlist");
+
     var inner = document.createElement("div");
     inner.classList.add("inner");
 
     var i = document.createElement("i");
     i.classList.add("icon","close");
-    i.addEventListener("click",function () {
-        document.querySelector(".js-playlist").removeChild(this.parentElement);
-    });
+    i.onclick=function () {
+        playList.removeChild(this.parentElement);
+        localStorage.setItem("key",playList.innerHTML);
+    };
     var iframe = document.createElement("iframe");
     iframe.frameBorder="0";
     iframe.marginWidth="0";
@@ -36,10 +38,27 @@ soundCloud.creadListItem=(src)=>{
     iframe.src=src;
     inner.appendChild(i);
     inner.appendChild(iframe);
-    document.querySelector(".js-playlist").appendChild(inner);
+    playList.insertBefore(inner,playList.childNodes[0]);
 };
+soundCloud.init=()=>{
+    var playList = document.querySelector(".js-playlist");
+    playList.innerHTML=localStorage.getItem("key");
+    var items = document.getElementsByClassName("close");
+    for(var i=0;i<items.length;i++){
+        items[i].addEventListener("click",function(){
+            playList.removeChild(this.parentElement);
+            localStorage.setItem("key",playList.innerHTML);
+        })
+    }
+};
+soundCloud.init();
+
+
 soundCloud.renderToList=(id)=>{
-    soundCloud.creadListItem("//music.163.com/outchain/player?type=2&id="+id+"&auto=1&height=66");
+    var url = "//music.163.com/outchain/player?type=2&id="+id+"&auto=1&height=66";
+    soundCloud.creadListItem(url);
+    //update localStorage
+    localStorage.setItem("key",document.querySelector(".js-playlist").innerHTML);
 };
 soundCloud.creadCard=(id,imgsrc,address,name)=>{
     var cardContainer = document.querySelector(".cards");
